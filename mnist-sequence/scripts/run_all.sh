@@ -9,10 +9,16 @@ readonly ADDITIONAL_PSL_OPTIONS='-D log4j.threshold=TRACE --postgres psl'
 
 readonly BATCH_SIZES='064'
 readonly LEARNING_RATES='00.01 00.10 00.50 01.00 02.00'
-readonly EPOCHS=`seq -w 500 500 2000`
-readonly COMPUTE_PERIODS='010 020 050 100'
+readonly EPOCHS='50 100 200 500'
+readonly COMPUTE_PERIODS='010 020 050 100 200 300'
 readonly RULE_SETS='single triple'
-readonly ADMM_ITERATIONS=`seq -w 500 500 2500`
+readonly ADMM_ITERATIONS=`seq -w 500 500 5000`
+
+# Note that the first value in each of these sequences will apply no binarization.
+readonly BIN_RANK_LOWER='0.00 0.11 0.21 0.31 0.41 0.51 0.61 0.71 0.81 0.91'
+readonly BIN_RANK_UPPER='1.00 0.90 0.80 0.70'
+readonly BIN_THRESHOLD_LOWER='0.00 0.10 0.20 0.30'
+readonly BIN_THRESHOLD_UPPER='1.00 0.50 0.40 0.30 0.20'
 
 function run_psl() {
     local cliDir=$1
@@ -61,26 +67,39 @@ function run_split() {
                 for computePeriod in ${COMPUTE_PERIODS}; do
                     for ruleSet in ${RULE_SETS}; do
                         for admmIterations in ${ADMM_ITERATIONS}; do
-                            local outDir="${BASE_OUT_DIR}/${batch}::Batch_Size/${learningRate}::Learning_Rate/${epoch}::Epochs/${computePeriod}::Compute_Period/${ruleSet}::Rule_Set/${admmIterations}::ADMM_Iterations"
+                            for binRankLower in ${BIN_RANK_LOWER}; do
+                                for binRankUpper in ${BIN_RANK_UPPER}; do
+                                    for binThresholdLower in ${BIN_THRESHOLD_LOWER}; do
+                                        for binThresholdUpper in ${BIN_THRESHOLD_UPPER}; do
+                                            local outDir="${BASE_OUT_DIR}/${batch}::Batch_Size/${learningRate}::Learning_Rate/${epoch}::Epochs/${computePeriod}::Compute_Period/${ruleSet}::Rule_Set/${admmIterations}::ADMM_Iterations/${binRankLower}::Bin_Rank_Lower/${binRankUpper}::Bin_Rank_Upper/${binThresholdLower}::Bin_Threshold_Lower/${binThresholdUpper}::Bin_Threshold_Upper"
 
-                            local options="${ADDITIONAL_PSL_OPTIONS}"
-                            options="${options} -D modelpredicate.batchsize=${batch}"
-                            options="${options} -D neural.learningrate=${learningRate}"
-                            options="${options} -D modelpredicate.iterations=${epoch}"
-                            options="${options} -D admmreasoner.computeperiod=${computePeriod}"
-                            options="${options} -D admmreasoner.maxiterations=${admmIterations}"
+                                            local options="${ADDITIONAL_PSL_OPTIONS}"
+                                            options="${options} -D modelpredicate.batchsize=${batch}"
+                                            options="${options} -D neural.learningrate=${learningRate}"
+                                            options="${options} -D modelpredicate.iterations=${epoch}"
+                                            options="${options} -D admmreasoner.computeperiod=${computePeriod}"
+                                            options="${options} -D admmreasoner.maxiterations=${admmIterations}"
+                                            options="${options} -D neural.binarize.rank.lower=${binRankLower}"
+                                            options="${options} -D neural.binarize.rank.upper=${binRankUpper}"
+                                            options="${options} -D neural.binarize.threshold.lower=${binThresholdLower}"
+                                            options="${options} -D neural.binarize.threshold.upper=${binThresholdUpper}"
 
-                            if [ "${ruleSet}" == "single" ]; then
-                                sed -i 's/^[0-9].* -> PredictedNumber(Image[12], [XY]).*$/### \0/' "${rulesPath}"
-                            elif [ "${ruleSet}" == "triple" ]; then
-                                sed -i 's/^### //' "${rulesPath}"
-                            else
-                                echo "Unknown rule set: '${ruleSet}'."
-                                exit 1
-                            fi
+                                            if [ "${ruleSet}" == "single" ]; then
+                                                sed -i 's/^[0-9].* -> PredictedNumber(Image[12], [XY]).*$/### \0/' "${rulesPath}"
+                                            elif [ "${ruleSet}" == "triple" ]; then
+                                                sed -i 's/^### //' "${rulesPath}"
+                                            else
+                                                echo "Unknown rule set: '${ruleSet}'."
+                                                exit 1
+                                            fi
 
-                            echo "Running: [Batch Size: ${batch}, Learning Rate: ${learningRate}, Epochs: ${epoch}, Compute Period: ${computePeriod}, Rule Set: ${ruleSet}, ADMM Iterations: ${admmIterations}]"
-                            run_psl "${cliDir}" "${outDir}" "${options}"
+                                            echo "Running: [Batch Size: ${batch}, Learning Rate: ${learningRate}, Epochs: ${epoch}, Compute Period: ${computePeriod}, Rule Set: ${ruleSet}, ADMM Iterations: ${admmIterations}, Bin Rank Lower: ${binRankLower}, Bin Rank Upper: ${binRankUpper}, Bin Threshold Lower: ${binThresholdLower}, Bin Threshold Upper: ${binThresholdUpper}]"
+
+                                            run_psl "${cliDir}" "${outDir}" "${options}"
+                                        done
+                                    done
+                                done
+                            done
                         done
                     done
                 done
