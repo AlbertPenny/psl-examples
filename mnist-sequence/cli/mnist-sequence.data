@@ -1,7 +1,9 @@
 predicates:
   Sequence/3: closed
   ModSum/3: closed
+  ObservedNumber/2: closed
   PredictedNumber/2: open
+  CandidateNumber/2: open
   NeuralClassifier/2:
     - open
     - modeltype: NeuralModel
@@ -12,12 +14,14 @@ predicates:
 
 observations:
   PredictedNumber : ../data/mnist-sequence/002_01000/predictednumber_obs.txt
+  ObservedNumber : ../data/mnist-sequence/002_01000/predictednumber_obs.txt
   Sequence : ../data/mnist-sequence/002_01000/sequence_obs.txt
   ModSum : ../data/mnist-sequence/002_01000/modsum_obs.txt
 
 targets:
   PredictedNumber : ../data/mnist-sequence/002_01000/predictednumber_targets.txt
   NeuralClassifier : ../data/mnist-sequence/002_01000/neuralclassifier_targets.txt
+  CandidateNumber : ../data/mnist-sequence/002_01000/neuralclassifier_targets.txt
 
 truth:
   PredictedNumber : ../data/mnist-sequence/002_01000/predictednumber_truth.txt

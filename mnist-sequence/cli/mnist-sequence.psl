@@ -1,4 +1,5 @@
 1: NeuralClassifier(Image, Number) = PredictedNumber(Image, Number) ^2
+// 1: NeuralClassifier(Image, Number) -> PredictedNumber(Image, Number) ^2
 
 // Having all three variations maximizes the use of observed information.
 // Only having one of these rules can cause certain situations to not ground all possibilities.
@@ -7,6 +8,40 @@
 1: Sequence(Image1, Image2, Image3) & PredictedNumber(Image2, Y) & PredictedNumber(Image3, Z) & ModSum(X, Y, Z) -> PredictedNumber(Image1, X) ^2
 1: Sequence(Image1, Image2, Image3) & PredictedNumber(Image3, Z) & PredictedNumber(Image1, X) & ModSum(X, Y, Z) -> PredictedNumber(Image2, Y) ^2
 
-PredictedNumber(Image, +Number) = 1 .
+/*
+10: Sequence(Image1, Image2, Image3) & ModSum(X, Y, Z)
+    & ObservedNumber(Image0, X) & PredictedNumber(Image1, X)
+    & PredictedNumber(Image2, Y)
+    -> PredictedNumber(Image3, Z) ^2
 
-// 0.1: !PredictedNumber(Image, Number) ^2
+10: Sequence(Image1, Image2, Image3) & ModSum(X, Y, Z)
+    & ObservedNumber(Image2, Y) & PredictedNumber(Image2, Y)
+    & PredictedNumber(Image3, Z)
+    -> PredictedNumber(Image1, X) ^2
+
+10: Sequence(Image1, Image2, Image3) & ModSum(X, Y, Z)
+    & ObservedNumber(Image3, Z) & PredictedNumber(Image3, Z)
+    & PredictedNumber(Image1, X)
+    -> PredictedNumber(Image2, Y) ^2
+*/
+
+/*
+100: Sequence(Image1, Image2, Image3) & ObservedNumber(Image1, X) & PredictedNumber(Image2, Y) & ModSum(X, Y, Z) -> PredictedNumber(Image3, Z) ^2
+100: Sequence(Image1, Image2, Image3) & ObservedNumber(Image2, Y) & PredictedNumber(Image3, Z) & ModSum(X, Y, Z) -> PredictedNumber(Image1, X) ^2
+100: Sequence(Image1, Image2, Image3) & ObservedNumber(Image3, Z) & PredictedNumber(Image1, X) & ModSum(X, Y, Z) -> PredictedNumber(Image2, Y) ^2
+*/
+
+PredictedNumber(Image, +Number) = 1 .
+// 10: PredictedNumber(Image, +Number) = 1
+// PredictedNumber(Image, +Number) / |Number| = 0.1 .
+
+// 10: 1.00001 * PredictedNumber(Image, +Number) >= 0.3 ^2
+// 1: 1.00001 * PredictedNumber(Image, +Number) >= 0.5 ^2
+// 1: 1.00001 * PredictedNumber(Image, +Number) >= 0.3 ^2
+// 1.00001 * PredictedNumber(Image, +Number) >= 0.25 .
+
+0.01: !PredictedNumber(Image, Number) ^2
+// 1: PredictedNumber(Image, Number) = 1.0 ^2
+// 1: PredictedNumber(Image, Number) = 0.5 ^2
+// 1: PredictedNumber(Image, Number)  <= 0.05 ^2
+// 1: PredictedNumber(Image, Number)  >= 0.50 ^2
